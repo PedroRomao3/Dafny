@@ -130,39 +130,45 @@ function InsertAt<T>(l: L.List<T>, p: nat, x: T): L.List<T>
 // Each Mailbox has a name, which is a string. 
 // Its main content is a set of messages.
 //
-class Mailbox { //Add specifications to the following
+class Mailbox {
   var name: string
   var messages: set<Message>
- 
-  // Creates an empty mailbox with name n
-  constructor (n: string)
+
+  constructor(n: string)
+    requires n != "" // <- Enforced here
+    ensures name == n
+    ensures messages == {} // <- Empty on creation
   {
     name := n;
     messages := {};
   }
 
-  // Adds message m to the mailbox
   method add(m: Message)
     modifies this
-  {    
+    ensures messages == old(messages) + {m}
+    ensures name == old(name)
+  {
     messages := { m } + messages;
   }
 
-  // Removes message m from mailbox
-  // m need not be in the mailbox 
   method remove(m: Message)
     modifies this
+    ensures messages == old(messages) - {m}
+    ensures name == old(name)
   {
     messages := messages - { m };
   }
 
-  // Empties the mailbox
   method empty()
     modifies this
+    ensures messages == {}
+    ensures name == old(name)
   {
     messages := {};
   }
 }
+
+
 
 //==========================================================
 //  MailApp
