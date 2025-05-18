@@ -12,20 +12,39 @@ import opened L = List
   
 // The next three classes have a minimal class definition,
 // for simplicity
-class Address 
-{
-  constructor () {}
+class Address {
+  var value: string
+
+  constructor(v: string)
+    requires v != ""
+    ensures value == v
+  {
+    value := v;
+  }
 }
 
-class Date 
-{
-  constructor () {}
+
+class Date {
+  var timestamp: int
+
+  constructor(t: int)
+    ensures timestamp == t
+  {
+    timestamp := t;
+  }
 }
 
-class MessageId 
-{
-  constructor () {}
+
+class MessageId {
+  var id: int
+
+  constructor(i: int)
+    ensures id == i
+  {
+    id := i;
+  }
 }
+
 
 //==========================================================
 //  Message
@@ -36,41 +55,73 @@ class Message
   var content: string
   var date: Date
   var sender: Address
-  var recipients: seq<Address>
+  var recipients: L.List<Address>
 
-  constructor (s: Address)
+  constructor(s: Address)
     ensures fresh(id)
     ensures fresh(date)
     ensures content == ""
     ensures sender == s
-    ensures recipients == []
+    ensures recipients == L.Nil
+  {
+    id := new MessageId(0);  // placeholder
+    date := new Date(0);     // placeholder
+    content := "";
+    sender := s;
+    recipients := L.Nil;
+  }
 
- 
   method setContent(c: string)
     modifies this
     ensures content == c
     ensures {id, date, sender} == old({id, date, sender})
     ensures recipients == old(recipients)
-  
+  {
+    content := c;
+  }
+
   method setDate(d: Date)
     modifies this
     ensures date == d
     ensures {id, sender} == old({id, sender})
     ensures recipients == old(recipients)
     ensures content == old(content)
- 
- 
+  {
+    date := d;
+  }
+
   method addRecipient(p: nat, r: Address)
     modifies this
-    requires p < |recipients|
-    ensures |recipients| == |old(recipients)| + 1
-    ensures forall i :: 0 <= i < p ==> recipients[i] == old(recipients[i])
-    ensures recipients[p] == r
-    ensures forall i :: p < i < |recipients| ==> recipients[i] == old(recipients[i-1])
+    requires p <= L.len(recipients) // allow adding at the end
+    ensures L.len(recipients) == L.len(old(recipients)) + 1
+    ensures L.elementSeq(recipients) == 
+            L.elementSeq(L.take(old(recipients), p)) + [r] + L.elementSeq(L.drop(old(recipients), p))
     ensures {id, date, sender} == old({id, date, sender})
     ensures content == old(content)
-  
+  {
+    recipients := InsertAt(recipients, p, r);
+  }
+
 }
+
+// Helper function to insert an element at a given position in a List
+function InsertAt<T>(l: L.List<T>, p: nat, x: T): L.List<T>
+  requires p <= L.len(l)
+  ensures L.len(InsertAt(l, p, x)) == L.len(l) + 1
+  ensures L.elementSeq(InsertAt(l, p, x)) ==
+          L.elementSeq(L.take(l, p)) + [x] + L.elementSeq(L.drop(l, p))
+{
+  if p == 0 then
+    Cons(x, l)
+  else
+    match l
+      case Cons(h, t) => Cons(h, InsertAt(t, p - 1, x))
+      case Nil => Nil // unreachable due to requires
+}
+
+
+
+
 
 //==========================================================
 //  Mailbox
