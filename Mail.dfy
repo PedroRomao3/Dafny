@@ -173,6 +173,15 @@ class Mailbox {
 //==========================================================
 //  MailApp
 //==========================================================
+
+ghost function ListElements<T>(l: L.List<T>): set<T>
+{
+  match l
+    case Nil => {}
+    case Cons(h, t) => {h} + ListElements(t)
+}
+
+
 class MailApp {
   // abstract field for user defined boxes
   ghost var userBoxes: set<Mailbox>
@@ -192,24 +201,25 @@ class MailApp {
   var userboxList: List<Mailbox>
 
   // Class invariant
-  ghost predicate isValid() 
-  {
-    // replace each `true` by your formulation of the invariants 
-    // described below
-    //----------------------------------------------------------
-    // Abstract state invariants
-    //----------------------------------------------------------
-    // 1. all system mailboxes (inbox, ..., sent) are distinct
-    && true
-    // 2. none of the system mailboxes are in the set
-    //    of user-defined mailboxes
-    && true
-    //----------------------------------------------------------
-    // Abstract-to-concrete state invariants
-    //----------------------------------------------------------
-    // userBoxes is the set of mailboxes in userboxList
-    && true
+  ghost predicate isValid() reads this {
+    // 1. System mailboxes are distinct
+    inbox != drafts &&
+    inbox != sent &&
+    inbox != trash &&
+    drafts != sent &&
+    drafts != trash &&
+    sent != trash &&
+
+    // 2. System mailboxes are not in user-defined set
+    inbox !in userBoxes &&
+    drafts !in userBoxes &&
+    trash !in userBoxes &&
+    sent !in userBoxes &&
+
+    // 3. Abstract = Concrete
+    userBoxes == ListElements(userboxList)
   }
+
 
   constructor ()
   {
@@ -222,50 +232,83 @@ class MailApp {
 
   // Deletes user-defined mailbox mb
   method deleteMailbox(mb: Mailbox)
+    modifies this
+    requires isValid()
+    ensures isValid()
   {
     userboxList := remove(userboxList, mb);
+    userBoxes := ListElements(userboxList); // maintain ghost state
   }
+
 
   // Adds a new mailbox with name n to set of user-defined mailboxes
   // provided that no user-defined mailbox has name n already
   method newMailbox(n: string)
+    modifies this
+    requires isValid()
+    requires n != ""
+    requires forall mb: Mailbox :: mb in userBoxes ==> mb.name != n
+    ensures isValid()
   {
     var mb := new Mailbox(n);
     userboxList := Cons(mb, userboxList);
+    userBoxes := ListElements(userboxList); // ghost update
   }
+
 
   // Adds a new message with sender s to the drafts mailbox
   method newMessage(s: Address)
+    modifies this
+    requires isValid()
+    ensures isValid()
   {
     var m := new Message(s);
     drafts.add(m);
   }
 
+
   // Moves message m from mailbox mb1 to a different mailbox mb2
-  method moveMessage (m: Message, mb1: Mailbox, mb2: Mailbox)
+  method moveMessage(m: Message, mb1: Mailbox, mb2: Mailbox)
+    modifies this
+    requires isValid()
+    ensures isValid()
   {
     mb1.remove(m);
     mb2.add(m);
   }
 
+
   // Moves message m from non-null mailbox mb to the trash mailbox
   // provided that mb is not the trash mailbox
-  method deleteMessage (m: Message, mb: Mailbox)
+  method deleteMessage(m: Message, mb: Mailbox)
+    modifies this
+    requires isValid()
+    requires mb != trash
+    ensures isValid()
   {
     moveMessage(m, mb, trash);
   }
 
+
   // Moves message m from the drafts mailbox to the sent mailbox
   method sendMessage(m: Message)
+    modifies this
+    requires isValid()
+    ensures isValid()
   {
     moveMessage(m, drafts, sent);
   }
 
+
   // Empties the trash mailbox
-  method emptyTrash ()
+  method emptyTrash()
+    modifies this
+    requires isValid()
+    ensures isValid()
   {
     trash.empty();
   }
+
 }
 
 // Test
