@@ -232,13 +232,17 @@ class MailApp {
 
   // Deletes user-defined mailbox mb
   method deleteMailbox(mb: Mailbox)
-    modifies this
+    modifies this, mb
     requires isValid()
-    ensures isValid()
+    requires mb in userBoxes
+    ensures isValid() //if we comment this line, this code works
   {
     userboxList := remove(userboxList, mb);
-    userBoxes := ListElements(userboxList); // maintain ghost state
+    userBoxes    := ListElements(userboxList);
+    mb.empty();
   }
+
+
 
 
   // Adds a new mailbox with name n to set of user-defined mailboxes
@@ -258,7 +262,7 @@ class MailApp {
 
   // Adds a new message with sender s to the drafts mailbox
   method newMessage(s: Address)
-    modifies this
+    modifies this, drafts
     requires isValid()
     ensures isValid()
   {
@@ -269,7 +273,7 @@ class MailApp {
 
   // Moves message m from mailbox mb1 to a different mailbox mb2
   method moveMessage(m: Message, mb1: Mailbox, mb2: Mailbox)
-    modifies this
+    modifies this, mb1, mb2
     requires isValid()
     ensures isValid()
   {
@@ -281,7 +285,7 @@ class MailApp {
   // Moves message m from non-null mailbox mb to the trash mailbox
   // provided that mb is not the trash mailbox
   method deleteMessage(m: Message, mb: Mailbox)
-    modifies this
+    modifies this, mb, trash
     requires isValid()
     requires mb != trash
     ensures isValid()
@@ -292,7 +296,7 @@ class MailApp {
 
   // Moves message m from the drafts mailbox to the sent mailbox
   method sendMessage(m: Message)
-    modifies this
+    modifies this, drafts, sent
     requires isValid()
     ensures isValid()
   {
@@ -301,13 +305,14 @@ class MailApp {
 
 
   // Empties the trash mailbox
-  method emptyTrash()
-    modifies this
+  method emptyTrash ()
+    modifies this, trash
     requires isValid()
     ensures isValid()
   {
     trash.empty();
   }
+
 
 }
 
