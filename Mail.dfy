@@ -15,6 +15,7 @@ import opened L = List
 class Address {
   var value: string
 
+  
   constructor(v: string)
     requires v != ""
     ensures value == v
@@ -181,72 +182,101 @@ ghost function ListElements<T>(l: L.List<T>): set<T>
     case Cons(h, t) => {h} + ListElements(t)
 }
 
+lemma RemovePreservesExclusion<T(==)>(l: List<T>, x: T, y: T)
+  ensures y !in elements(l) ==> y !in elements(remove(l, x))
+{
+  match l
+  case Nil => {}
+  case Cons(h, t) =>
+    if x == h {
+      RemovePreservesExclusion(t, x, y);
+    } else {
+      RemovePreservesExclusion(t, x, y);
+    }
+}
+
+// This lemma is used to prove that the system boxes
+// are not in the userBoxes after a mailbox is removed
+// from the userBoxes. It is used in the deleteMailbox
+// method of the MailApp class.
+lemma RemovePreservesSystemBoxes(l: List<Mailbox>, x: Mailbox, i: Mailbox, d: Mailbox, t: Mailbox, s: Mailbox)
+  requires i !in ListElements(l)
+  requires d !in ListElements(l)
+  requires t !in ListElements(l)
+  requires s !in ListElements(l)
+  ensures i !in ListElements(remove(l, x))
+  ensures d !in ListElements(remove(l, x))
+  ensures t !in ListElements(remove(l, x))
+  ensures s !in ListElements(remove(l, x))
+{
+  RemovePreservesExclusion(l, x, i);
+  RemovePreservesExclusion(l, x, d);
+  RemovePreservesExclusion(l, x, t);
+  RemovePreservesExclusion(l, x, s);
+}
+
 
 class MailApp {
-  // abstract field for user defined boxes
   ghost var userBoxes: set<Mailbox>
-  
-  // abstract function returning all system mailboxes in one set
+
   ghost function systemBoxes(): set<Mailbox>
     reads this
   { {inbox, drafts, trash, sent} }
 
-  // the inbox, drafts, trash and sent are both abstract and concrete
   var inbox: Mailbox
   var drafts: Mailbox
   var trash: Mailbox
   var sent: Mailbox
 
-  // userboxList implements userBoxes 
   var userboxList: List<Mailbox>
 
-  // Class invariant
   ghost predicate isValid() reads this {
-    // 1. System mailboxes are distinct
     inbox != drafts &&
     inbox != sent &&
     inbox != trash &&
     drafts != sent &&
     drafts != trash &&
     sent != trash &&
-
-    // 2. System mailboxes are not in user-defined set
     inbox !in userBoxes &&
     drafts !in userBoxes &&
     trash !in userBoxes &&
     sent !in userBoxes &&
-
-    // 3. Abstract = Concrete
     userBoxes == ListElements(userboxList)
   }
 
-
   constructor ()
+    ensures inbox.name == "Inbox"
+    ensures drafts.name == "Drafts"
+    ensures trash.name == "Trash"
+    ensures sent.name == "Sent"
+    ensures inbox.messages == {}
+    ensures drafts.messages == {}
+    ensures trash.messages == {}
+    ensures sent.messages == {}
+    ensures userBoxes == {}
   {
     inbox := new Mailbox("Inbox");
     drafts := new Mailbox("Drafts");
     trash := new Mailbox("Trash");
     sent := new Mailbox("Sent");
+    userBoxes := {};
     userboxList := Nil;
   }
 
-  // Deletes user-defined mailbox mb
   method deleteMailbox(mb: Mailbox)
     modifies this, mb
     requires isValid()
     requires mb in userBoxes
-    ensures isValid() //if we comment this line, this code works
+    ensures isValid()
   {
+    // Prove that system boxes stay out of the updated userBoxes
+    RemovePreservesSystemBoxes(userboxList, mb, inbox, drafts, trash, sent);
+
     userboxList := remove(userboxList, mb);
     userBoxes    := ListElements(userboxList);
     mb.empty();
   }
 
-
-
-
-  // Adds a new mailbox with name n to set of user-defined mailboxes
-  // provided that no user-defined mailbox has name n already
   method newMailbox(n: string)
     modifies this
     requires isValid()
@@ -256,11 +286,9 @@ class MailApp {
   {
     var mb := new Mailbox(n);
     userboxList := Cons(mb, userboxList);
-    userBoxes := ListElements(userboxList); // ghost update
+    userBoxes := ListElements(userboxList);
   }
 
-
-  // Adds a new message with sender s to the drafts mailbox
   method newMessage(s: Address)
     modifies this, drafts
     requires isValid()
@@ -270,8 +298,6 @@ class MailApp {
     drafts.add(m);
   }
 
-
-  // Moves message m from mailbox mb1 to a different mailbox mb2
   method moveMessage(m: Message, mb1: Mailbox, mb2: Mailbox)
     modifies this, mb1, mb2
     requires isValid()
@@ -281,9 +307,6 @@ class MailApp {
     mb2.add(m);
   }
 
-
-  // Moves message m from non-null mailbox mb to the trash mailbox
-  // provided that mb is not the trash mailbox
   method deleteMessage(m: Message, mb: Mailbox)
     modifies this, mb, trash
     requires isValid()
@@ -293,8 +316,6 @@ class MailApp {
     moveMessage(m, mb, trash);
   }
 
-
-  // Moves message m from the drafts mailbox to the sent mailbox
   method sendMessage(m: Message)
     modifies this, drafts, sent
     requires isValid()
@@ -303,8 +324,6 @@ class MailApp {
     moveMessage(m, drafts, sent);
   }
 
-
-  // Empties the trash mailbox
   method emptyTrash ()
     modifies this, trash
     requires isValid()
@@ -312,9 +331,8 @@ class MailApp {
   {
     trash.empty();
   }
-
-
 }
+
 
 // Test
 /* Can be used to test your code. */
@@ -330,12 +348,12 @@ method test() {
                               ma.trash.messages ==
                               ma.sent.messages == {};
 
-  ma.newMailbox("students"); 
-  assert exists mb: Mailbox :: mb in ma.userBoxes &&
-                               mb.name == "students" &&
-                               mb.messages == {};
+  ma.newMailbox("students");                              //THESE
+  assert exists mb: Mailbox :: mb in ma.userBoxes &&      //LINES
+                               mb.name == "students" &&   //YIELD
+                               mb.messages == {};         //PROBLEMS
 
-  var s := new Address();
+  var s := new Address("email@address.com");
   ma.newMessage(s);        
   assert exists nw: Message :: ma.drafts.messages == {nw};
 }
