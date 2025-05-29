@@ -254,6 +254,7 @@ class MailApp {
     ensures trash.messages == {}
     ensures sent.messages == {}
     ensures userBoxes == {}
+    ensures isValid()
   {
     inbox := new Mailbox("Inbox");
     drafts := new Mailbox("Drafts");
@@ -283,16 +284,28 @@ class MailApp {
     requires n != ""
     requires forall mb: Mailbox :: mb in userBoxes ==> mb.name != n
     ensures isValid()
+    ensures exists mb: Mailbox :: mb in userBoxes && mb.name == n && mb.messages == {}
+    ensures fresh(userBoxes - old(userBoxes))
   {
     var mb := new Mailbox(n);
     userboxList := Cons(mb, userboxList);
     userBoxes := ListElements(userboxList);
+
+    assert inbox !in userBoxes;
+    assert drafts !in userBoxes;
+    assert trash !in userBoxes;
+    assert sent !in userBoxes;
   }
 
   method newMessage(s: Address)
     modifies this, drafts
     requires isValid()
     ensures isValid()
+    ensures exists m: Message :: m in drafts.messages && m.sender == s && fresh(m)
+    ensures |drafts.messages| == |old(drafts.messages)| + 1
+    ensures forall m: Message :: m in old(drafts.messages) ==> m in drafts.messages
+    ensures old(drafts.messages) == {} ==> (|drafts.messages| == 1 && 
+            exists m: Message :: drafts.messages == {m} && m.sender == s && fresh(m))
   {
     var m := new Message(s);
     drafts.add(m);
