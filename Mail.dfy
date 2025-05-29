@@ -245,10 +245,10 @@ class MailApp {
   }
 
   constructor ()
-    ensures inbox.name == "Inbox"
-    ensures drafts.name == "Drafts"
-    ensures trash.name == "Trash"
-    ensures sent.name == "Sent"
+    ensures inbox.name == "Inbox" && fresh(inbox)
+    ensures drafts.name == "Drafts" && fresh(drafts)
+    ensures trash.name == "Trash" && fresh(trash)
+    ensures sent.name == "Sent" && fresh(sent)
     ensures inbox.messages == {}
     ensures drafts.messages == {}
     ensures trash.messages == {}
@@ -336,7 +336,7 @@ class MailApp {
 
 // Test
 /* Can be used to test your code. */
-/*
+
 method test() {
 
   var ma := new MailApp(); 
@@ -357,4 +357,3 @@ method test() {
   ma.newMessage(s);        
   assert exists nw: Message :: ma.drafts.messages == {nw};
 }
-*/
