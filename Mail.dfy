@@ -149,7 +149,7 @@ class Mailbox {
     ensures messages == old(messages) + {m}
     ensures name == old(name)
   {
-    messages := { m } + messages;
+    messages := { m } + messages; //assignment might update an object not in the enclosing context's modifies clause
   }
 
   method remove(m: Message)
@@ -298,7 +298,7 @@ class MailApp {
   }
 
   method newMessage(s: Address)
-    modifies this, drafts
+    modifies drafts
     requires isValid()
     ensures isValid()
     ensures exists m: Message :: m in drafts.messages && m.sender == s && fresh(m)
@@ -306,9 +306,11 @@ class MailApp {
     ensures forall m: Message :: m in old(drafts.messages) ==> m in drafts.messages
     ensures old(drafts.messages) == {} ==> (|drafts.messages| == 1 && 
             exists m: Message :: drafts.messages == {m} && m.sender == s && fresh(m))
+    ensures old(drafts.messages) == {} ==> 
+        (exists nw: Message :: drafts.messages == {nw})
   {
     var m := new Message(s);
-    drafts.add(m);
+    drafts.add(m);  //THIS LINE NOW VIOLATES CONTEXTS' MODIFIES CLAUSE
   }
 
   method moveMessage(m: Message, mb1: Mailbox, mb2: Mailbox)
@@ -317,7 +319,7 @@ class MailApp {
     ensures isValid()
   {
     mb1.remove(m);
-    mb2.add(m);
+    mb2.add(m); //THIS LINE NOW VIOLATES CONTEXTS' MODIFIES CLAUSE
   }
 
   method deleteMessage(m: Message, mb: Mailbox)
@@ -350,8 +352,8 @@ class MailApp {
 // Test
 /* Can be used to test your code. */
 
-method test() {
-
+method test() 
+{
   var ma := new MailApp(); 
   assert ma.inbox.name == "Inbox";
   assert ma.drafts.name == "Drafts";
@@ -361,12 +363,12 @@ method test() {
                               ma.trash.messages ==
                               ma.sent.messages == {};
 
-  ma.newMailbox("students");                              //THESE
-  assert exists mb: Mailbox :: mb in ma.userBoxes &&      //LINES
-                               mb.name == "students" &&   //YIELD
-                               mb.messages == {};         //PROBLEMS
+  ma.newMailbox("students");                              
+  assert exists mb: Mailbox :: mb in ma.userBoxes &&      
+                               mb.name == "students" &&   
+                               mb.messages == {};         
 
   var s := new Address("email@address.com");
-  ma.newMessage(s);        
-  assert exists nw: Message :: ma.drafts.messages == {nw};
+  ma.newMessage(s);  
+  assert exists nw: Message :: ma.drafts.messages == {nw};  
 }
