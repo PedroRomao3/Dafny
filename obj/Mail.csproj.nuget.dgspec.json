@@ -1,0 +1,92 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/pedroromao/dafny_proj/Dafny/Mail.csproj": {}
+  },
+  "projects": {
+    "/home/pedroromao/dafny_proj/Dafny/Mail.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/pedroromao/dafny_proj/Dafny/Mail.csproj",
+        "projectName": "Mail",
+        "projectPath": "/home/pedroromao/dafny_proj/Dafny/Mail.csproj",
+        "packagesPath": "/home/pedroromao/.nuget/packages/",
+        "outputPath": "/home/pedroromao/dafny_proj/Dafny/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/pedroromao/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/lib64/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "System.Collections.Immutable": {
+              "target": "Package",
+              "version": "[1.7.1, )"
+            },
+            "System.Runtime.Numerics": {
+              "target": "Package",
+              "version": "[4.3.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.15, 8.0.15]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.linux-x64",
+              "version": "[8.0.15, 8.0.15]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.15, 8.0.15]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/9.0.105/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

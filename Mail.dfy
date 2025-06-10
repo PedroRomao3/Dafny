@@ -285,6 +285,7 @@ class MailApp {
     requires forall mb: Mailbox :: mb in userBoxes ==> mb.name != n
     ensures isValid()
     ensures exists mb: Mailbox :: mb in userBoxes && mb.name == n && mb.messages == {}
+    ensures drafts == old(drafts)
     ensures fresh(userBoxes - old(userBoxes))
   {
     var mb := new Mailbox(n);
@@ -362,6 +363,7 @@ method test() {
                               ma.sent.messages == {};
 
   ma.newMailbox("students");                              //THESE
+  //assert ma.drafts.messages == {};
   assert exists mb: Mailbox :: mb in ma.userBoxes &&      //LINES
                                mb.name == "students" &&   //YIELD
                                mb.messages == {};         //PROBLEMS

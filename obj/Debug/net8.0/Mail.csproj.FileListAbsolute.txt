@@ -1,0 +1,5 @@
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail.GeneratedMSBuildEditorConfig.editorconfig
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail.AssemblyInfoInputs.cache
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail.AssemblyInfo.cs
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail.csproj.CoreCompileInputs.cache
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail.sourcelink.json
