@@ -9,15 +9,6 @@
   José 
   ===============================================*/
 
-
-
-
-
-// ===============================================
-// ===============================================
-// INITIAL IS_READ(ITS ALL WRONG)
-// ===============================================
-// ===============================================
 include "List.dfy"
 
 import opened L = List
@@ -69,7 +60,7 @@ class Message
   var date: Date
   var sender: Address
   var recipients: L.List<Address>
-  var isRead: bool  // New field to track read status
+  var lastState: Mailbox?
 
   constructor(s: Address)
     ensures fresh(id)
@@ -77,14 +68,14 @@ class Message
     ensures content == ""
     ensures sender == s
     ensures recipients == L.Nil
-    ensures !isRead     // Messages are unread by default
+    ensures lastState == null
   {
     id := new MessageId(0);  // placeholder
     date := new Date(0);     // placeholder
     content := "";
     sender := s;
     recipients := L.Nil;
-    isRead := false;
+    lastState := null; // no mailbox state yet
   }
 
   method setContent(c: string)
@@ -92,7 +83,6 @@ class Message
     ensures content == c
     ensures {id, date, sender} == old({id, date, sender})
     ensures recipients == old(recipients)
-    ensures isRead == old(isRead)  // Preserve read status
   {
     content := c;
   }
@@ -103,7 +93,6 @@ class Message
     ensures {id, sender} == old({id, sender})
     ensures recipients == old(recipients)
     ensures content == old(content)
-    ensures isRead == old(isRead)  // Preserve read status
   {
     date := d;
   }
@@ -116,36 +105,21 @@ class Message
             L.elementSeq(L.take(old(recipients), position)) + [recipient] + L.elementSeq(L.drop(old(recipients), position))
     ensures {id, date, sender} == old({id, date, sender})
     ensures content == old(content)
-    ensures isRead == old(isRead)  // Preserve read status
   {
     recipients := InsertAt(recipients, position, recipient);
   }
 
-  // Marks the message as read
-  method markAsRead()
+  //changes the last state of the message
+  method setLastState(mb: Mailbox?)
     modifies this
-    ensures isRead
-    ensures id == old(id)
+    ensures lastState == mb
+    ensures {id, date, sender} == old({id, date, sender})
     ensures content == old(content)
-    ensures date == old(date)
-    ensures sender == old(sender)
     ensures recipients == old(recipients)
   {
-    isRead := true;
+    lastState := mb;
   }
 
-  // Marks the message as unread
-  method markAsUnread()
-    modifies this
-    ensures !isRead
-    ensures id == old(id)
-    ensures content == old(content)
-    ensures date == old(date)
-    ensures sender == old(sender)
-    ensures recipients == old(recipients)
-  {
-    isRead := false;
-  }
 }
 
 // Helper function to insert an element at a given position in a List
@@ -215,35 +189,6 @@ class Mailbox {
   {
     messages := {};
   }
-
-  // Returns the count of unread messages in the mailbox
-  method countUnread() returns (count: nat)
-    ensures count == |set m | m in messages && !m.isRead|
-  {
-    count := 0;
-    var unreadMessages := set m | m in messages && !m.isRead;
-    count := |unreadMessages|;
-  }
-
-  // Marks all messages in the mailbox as read
-  method markAllAsRead()
-    modifies this, messages
-    ensures forall m :: m in messages ==> m.isRead
-    ensures messages == old(messages)
-    ensures name == old(name)
-  {
-    var msgs := messages;
-    while msgs != {}
-      decreases |msgs|
-      modifies msgs
-      invariant msgs <= messages
-      invariant forall m :: m in messages && m !in msgs ==> m.isRead
-    {
-      var m :| m in msgs;
-      m.markAsRead();
-      msgs := msgs - {m};
-    }
-  }
 }
 
 ghost function ListElements<T>(l: L.List<T>): set<T>
@@ -270,20 +215,23 @@ lemma RemovePreservesExclusion<T(==)>(l: List<T>, x: T, y: T)
 // are not in the userBoxes after a mailbox is removed
 // from the userBoxes. It is used in the deleteMailbox
 // method of the MailApp class.
-lemma RemovePreservesSystemBoxes(l: List<Mailbox>, x: Mailbox, i: Mailbox, d: Mailbox, t: Mailbox, s: Mailbox)
+lemma RemovePreservesSystemBoxes(l: List<Mailbox>, x: Mailbox, i: Mailbox, d: Mailbox, t: Mailbox, s: Mailbox, a: Mailbox)
   requires i !in ListElements(l)
   requires d !in ListElements(l)
   requires t !in ListElements(l)
   requires s !in ListElements(l)
+  requires a !in ListElements(l) //  adding archive
   ensures i !in ListElements(remove(l, x))
   ensures d !in ListElements(remove(l, x))
   ensures t !in ListElements(remove(l, x))
   ensures s !in ListElements(remove(l, x))
+  ensures a !in ListElements(remove(l, x)) //  adding archive
 {
   RemovePreservesExclusion(l, x, i);
   RemovePreservesExclusion(l, x, d);
   RemovePreservesExclusion(l, x, t);
   RemovePreservesExclusion(l, x, s);
+  RemovePreservesExclusion(l, x, a); //  adding archive
 }
 
 
@@ -299,13 +247,15 @@ class MailApp {
   // abstract function returning all system mailboxes in one set
   ghost function systemBoxes(): set<Mailbox>
     reads this
-  { {inbox, drafts, trash, sent} }
+  { {inbox, drafts, trash, sent, archive} }
 
   // the inbox, drafts, trash and sent are both abstract and concrete
   var inbox: Mailbox
   var drafts: Mailbox
   var trash: Mailbox
   var sent: Mailbox
+  // adding a new Mailbox for archive
+  var archive: Mailbox
 
   // userboxList implements userBoxes
   var userboxList: List<Mailbox>
@@ -313,19 +263,24 @@ class MailApp {
   // Class invariant
   ghost predicate isValid() reads this {
     // Abstract state invariants
-    // 1. all system mailboxes (inbox, ..., sent) are distinct
+    // 1. all system mailboxes (inbox, ..., sent, archive) are distinct
     inbox != drafts &&
     inbox != sent &&
     inbox != trash &&
+    inbox != archive && //  adding archive
     drafts != sent &&
     drafts != trash &&
+    drafts != archive && //  adding archive
     sent != trash &&
+    sent != archive && //  adding archive
+    trash != archive && //  adding archive
     // 2. none of the system mailboxes are in the set
     //    of user-defined mailboxes
     inbox !in userBoxes &&
     drafts !in userBoxes &&
     trash !in userBoxes &&
     sent !in userBoxes &&
+    archive !in userBoxes && //  adding archive
     // Abstract-to-concrete state invariants
     // userBoxes is the set of mailboxes in userboxList
     userBoxes == ListElements(userboxList)
@@ -336,10 +291,12 @@ class MailApp {
     ensures drafts.name == "Drafts" && fresh(drafts)
     ensures trash.name == "Trash" && fresh(trash)
     ensures sent.name == "Sent" && fresh(sent)
+    ensures archive.name == "Archive" && fresh(archive) //  adding archive
     ensures inbox.messages == {}
     ensures drafts.messages == {}
     ensures trash.messages == {}
     ensures sent.messages == {}
+    ensures archive.messages == {} //  adding archive
     ensures userBoxes == {}
     ensures isValid()
   {
@@ -347,6 +304,7 @@ class MailApp {
     drafts := new Mailbox("Drafts");
     trash := new Mailbox("Trash");
     sent := new Mailbox("Sent");
+    archive := new Mailbox("Archive"); //  adding archive
     userBoxes := {};
     userboxList := Nil;
   }
@@ -359,10 +317,10 @@ class MailApp {
     ensures isValid()
   {
     // Prove that system boxes stay out of the updated userBoxes
-    RemovePreservesSystemBoxes(userboxList, mb, inbox, drafts, trash, sent);
+    RemovePreservesSystemBoxes(userboxList, mb, inbox, drafts, trash, sent, archive);
 
     userboxList := remove(userboxList, mb);
-    userBoxes := ListElements(userboxList);
+    userBoxes    := ListElements(userboxList);
     mb.empty();
   }
 
@@ -375,7 +333,7 @@ class MailApp {
     requires forall mb: Mailbox :: mb in userBoxes ==> mb.name != n
     ensures isValid()
     ensures exists mb: Mailbox :: mb in userBoxes && mb.name == n && mb.messages == {}
-    ensures drafts == old(drafts)
+    ensures [inbox, drafts, trash, sent, archive] == old([inbox, drafts, trash, sent, archive])
     ensures fresh(userBoxes - old(userBoxes))
   {
     var mb := new Mailbox(n);
@@ -399,23 +357,24 @@ class MailApp {
 
   // Moves message m from mailbox mb1 to a different mailbox mb2
   method moveMessage(m: Message, fromMailbox: Mailbox, toMailbox: Mailbox)
-    modifies this, fromMailbox, toMailbox
-    requires isValid()
-    requires fromMailbox != toMailbox
-    ensures isValid()
-    ensures m !in fromMailbox.messages
-    ensures m in toMailbox.messages
-    ensures fromMailbox.messages == old(fromMailbox.messages) - {m}
-    ensures toMailbox.messages == old(toMailbox.messages) + {m}
+    modifies this, m, fromMailbox, toMailbox
+  requires isValid()
+  requires fromMailbox != toMailbox
+  ensures isValid()
+  ensures m !in fromMailbox.messages
+  ensures m in toMailbox.messages
+  ensures fromMailbox.messages == old(fromMailbox.messages) - {m}
+  ensures toMailbox.messages == old(toMailbox.messages) + {m}
   {
     fromMailbox.remove(m);
+    m.setLastState(fromMailbox); // update last state of the message
     toMailbox.add(m);
   }
 
   // Moves message m from non-null mailbox mb to the trash mailbox
   // provided that mb is not the trash mailbox
   method deleteMessage(m: Message, mb: Mailbox)
-    modifies this, mb, trash
+    modifies this, mb, m, trash
     requires isValid()
     requires mb != trash
     ensures isValid()
@@ -425,67 +384,42 @@ class MailApp {
 
   // Moves message m from the drafts mailbox to the sent mailbox
   method sendMessage(m: Message)
-    modifies this, drafts, sent
+    modifies this, drafts, m, sent
     requires isValid()
     ensures isValid()
   {
     moveMessage(m, drafts, sent);
   }
 
+  // Archive message from any mailbox
+  method archiveMessage(m: Message, mb: Mailbox)
+    modifies this, mb, m, archive
+    requires isValid()
+    requires mb != archive
+    ensures isValid()
+  {
+    moveMessage(m, mb, archive);
+  }
+
+  // Unarchives message m to the past mailbox
+  method unarchiveMessage(m: Message)
+    modifies this, m, archive, m.lastState
+    requires isValid()
+    requires m.lastState != archive
+    requires m.lastState != null // message must have a last state
+    ensures isValid()
+  {
+    moveMessage(m, archive, m.lastState);
+    m.setLastState(archive); // reset last state after unarchiving
+  }
+
   // Empties the trash mailbox
-  method emptyTrash()
+  method emptyTrash ()
     modifies this, trash
     requires isValid()
     ensures isValid()
   {
     trash.empty();
-  }
-
-  // Returns the total number of unread messages across all mailboxes
-  method totalUnreadMessages() returns (count: nat)
-    requires isValid()
-    ensures count == |set m | m in inbox.messages && !m.isRead| + 
-                    |set m | m in drafts.messages && !m.isRead| +
-                    |set m | m in sent.messages && !m.isRead| +
-                    |set m | m in trash.messages && !m.isRead| +
-                    |set mb, m | mb in userBoxes && m in mb.messages && !m.isRead|
-  {
-    var inboxUnread := inbox.countUnread();
-    var draftsUnread := drafts.countUnread();
-    var sentUnread := sent.countUnread();
-    var trashUnread := trash.countUnread();
-    
-    count := inboxUnread + draftsUnread + sentUnread + trashUnread;
-    
-    // Count unread messages in user mailboxes
-    var remaining := userboxList;
-    while remaining != Nil
-      decreases |remaining|
-      invariant count == |set m | m in inbox.messages && !m.isRead| + 
-                         |set m | m in drafts.messages && !m.isRead| +
-                         |set m | m in sent.messages && !m.isRead| +
-                         |set m | m in trash.messages && !m.isRead| +
-                         |set mb, m | mb in (ListElements(userboxList) - ListElements(remaining)) && m in mb.messages && !m.isRead|
-    {
-      match remaining {
-        case Cons(mb, rest) => 
-          var mbUnread := mb.countUnread();
-          count := count + mbUnread;
-          remaining := rest;
-      }
-    }
-  }
-
-  // Mark a message as read
-  method readMessage(m: Message)
-    modifies m
-    requires isValid()
-    requires m in inbox.messages || m in sent.messages || m in drafts.messages || m in trash.messages || 
-             (exists mb :: mb in userBoxes && m in mb.messages)
-    ensures isValid()
-    ensures m.isRead
-  {
-    m.markAsRead();
   }
 }
 
@@ -493,6 +427,7 @@ class MailApp {
 /* Can be used to test your code. */
 
 method test() {
+
   var ma := new MailApp();
   assert ma.inbox.name == "Inbox";
   assert ma.drafts.name == "Drafts";
@@ -503,6 +438,7 @@ method test() {
          ma.sent.messages == {};
 
   ma.newMailbox("students");
+  //assert ma.drafts.messages == {};
   assert exists mb: Mailbox :: mb in ma.userBoxes &&
                                mb.name == "students" &&
                                mb.messages == {};
@@ -510,20 +446,4 @@ method test() {
   var s := new Address("email@address.com");
   ma.newMessage(s);
   assert exists nw: Message :: ma.drafts.messages == {nw};
-  
-  // Test read/unread functionality
-  var totalUnread := ma.totalUnreadMessages();
-  assert totalUnread == 1; // The new message should be unread
-  
-  var message :| message in ma.drafts.messages;
-  assert !message.isRead; // New message should be unread
-  
-  ma.readMessage(message);
-  assert message.isRead; // Message should now be read
-  
-  totalUnread := ma.totalUnreadMessages();
-  assert totalUnread == 0; // No unread messages
-  
-  message.markAsUnread();
-  assert !message.isRead; // Message should be unread again
 }

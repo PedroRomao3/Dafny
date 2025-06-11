@@ -306,7 +306,7 @@ class MailApp {
     requires forall mb: Mailbox :: mb in userBoxes ==> mb.name != n
     ensures isValid()
     ensures exists mb: Mailbox :: mb in userBoxes && mb.name == n && mb.messages == {}
-    ensures drafts == old(drafts)
+    ensures [inbox, drafts, trash, sent] == old([inbox, drafts, trash, sent])
     ensures fresh(userBoxes - old(userBoxes))
   {
     var mb := new Mailbox(n);
