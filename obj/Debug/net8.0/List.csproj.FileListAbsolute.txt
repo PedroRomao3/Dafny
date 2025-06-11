@@ -1,0 +1,5 @@
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/List.GeneratedMSBuildEditorConfig.editorconfig
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/List.AssemblyInfoInputs.cache
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/List.AssemblyInfo.cs
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/List.csproj.CoreCompileInputs.cache
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/List.sourcelink.json

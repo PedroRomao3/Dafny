@@ -1,5 +1,13 @@
+<<<<<<< HEAD
 /home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.GeneratedMSBuildEditorConfig.editorconfig
 /home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.AssemblyInfoInputs.cache
 /home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.AssemblyInfo.cs
 /home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.csproj.CoreCompileInputs.cache
 /home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.sourcelink.json
+=======
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail_improv.GeneratedMSBuildEditorConfig.editorconfig
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail_improv.AssemblyInfoInputs.cache
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail_improv.AssemblyInfo.cs
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail_improv.csproj.CoreCompileInputs.cache
+/home/pedroromao/dafny_proj/Dafny/obj/Debug/net8.0/Mail_improv.sourcelink.json
+>>>>>>> f3d094a (forward)

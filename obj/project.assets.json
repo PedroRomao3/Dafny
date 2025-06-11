@@ -954,11 +954,19 @@
   "project": {
     "version": "1.0.0",
     "restore": {
+<<<<<<< HEAD
       "projectUniqueName": "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/Mail_improv.csproj",
       "projectName": "Mail_improv",
       "projectPath": "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/Mail_improv.csproj",
       "packagesPath": "/home/jmffelisberto/.nuget/packages/",
       "outputPath": "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/",
+=======
+      "projectUniqueName": "/home/pedroromao/dafny_proj/Dafny/List.csproj",
+      "projectName": "List",
+      "projectPath": "/home/pedroromao/dafny_proj/Dafny/List.csproj",
+      "packagesPath": "/home/pedroromao/.nuget/packages/",
+      "outputPath": "/home/pedroromao/dafny_proj/Dafny/obj/",
+>>>>>>> f3d094a (forward)
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/jmffelisberto/.nuget/NuGet/NuGet.Config"
@@ -1010,6 +1018,19 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+<<<<<<< HEAD
+=======
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[8.0.15, 8.0.15]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[8.0.15, 8.0.15]"
+          }
+        ],
+>>>>>>> f3d094a (forward)
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"

@@ -1,46 +1,26 @@
 {
   "format": 1,
   "restore": {
-<<<<<<< HEAD
-    "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/Mail_improv.csproj": {}
+    "/home/pedroromao/dafny_proj/Dafny/List.csproj": {}
   },
   "projects": {
-    "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/Mail_improv.csproj": {
+    "/home/pedroromao/dafny_proj/Dafny/List.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/Mail_improv.csproj",
-        "projectName": "Mail_improv",
-        "projectPath": "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/Mail_improv.csproj",
-        "packagesPath": "/home/jmffelisberto/.nuget/packages/",
-        "outputPath": "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/",
-        "projectStyle": "PackageReference",
-        "configFilePaths": [
-          "/home/jmffelisberto/.nuget/NuGet/NuGet.Config"
-=======
-    "/home/pedroromao/dafny_proj/Dafny/Mail_improv.csproj": {}
-  },
-  "projects": {
-    "/home/pedroromao/dafny_proj/Dafny/Mail_improv.csproj": {
-      "version": "1.0.0",
-      "restore": {
-        "projectUniqueName": "/home/pedroromao/dafny_proj/Dafny/Mail_improv.csproj",
-        "projectName": "Mail_improv",
-        "projectPath": "/home/pedroromao/dafny_proj/Dafny/Mail_improv.csproj",
+        "projectUniqueName": "/home/pedroromao/dafny_proj/Dafny/List.csproj",
+        "projectName": "List",
+        "projectPath": "/home/pedroromao/dafny_proj/Dafny/List.csproj",
         "packagesPath": "/home/pedroromao/.nuget/packages/",
         "outputPath": "/home/pedroromao/dafny_proj/Dafny/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/pedroromao/.nuget/NuGet/NuGet.Config"
->>>>>>> f3d094a (forward)
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-<<<<<<< HEAD
-=======
           "/usr/lib64/dotnet/library-packs": {},
->>>>>>> f3d094a (forward)
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -58,12 +38,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-<<<<<<< HEAD
-        }
-=======
         },
         "SdkAnalysisLevel": "9.0.100"
->>>>>>> f3d094a (forward)
       },
       "frameworks": {
         "net8.0": {
@@ -89,8 +65,6 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-<<<<<<< HEAD
-=======
           "downloadDependencies": [
             {
               "name": "Microsoft.AspNetCore.App.Ref",
@@ -101,17 +75,12 @@
               "version": "[8.0.15, 8.0.15]"
             }
           ],
->>>>>>> f3d094a (forward)
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-<<<<<<< HEAD
-          "runtimeIdentifierGraphPath": "/snap/dotnet-sdk/256/sdk/8.0.407/PortableRuntimeIdentifierGraph.json"
-=======
           "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/9.0.105/PortableRuntimeIdentifierGraph.json"
->>>>>>> f3d094a (forward)
         }
       }
     }

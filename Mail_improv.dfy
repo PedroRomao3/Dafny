@@ -12,6 +12,8 @@
   - Add a new mailbox for archiving messages
   -- Add a method to archive messages
   -- Add a method to unarchive messages
+  - Add a method to forward message
+  - Add a method to add new recipients
   ===============================================*/
 
 include "List.dfy"
@@ -135,11 +137,11 @@ function InsertAt<T>(l: L.List<T>, p: nat, x: T): L.List<T>
           L.elementSeq(L.take(l, p)) + [x] + L.elementSeq(L.drop(l, p))
 {
   if p == 0 then
-    Cons(x, l)
+    L.Cons(x, l)
   else
     match l
-    case Cons(h, t) => Cons(h, InsertAt(t, p - 1, x))
-    case Nil => Nil // unreachable due to requires
+    case Cons(h, t) => L.Cons(h, InsertAt(t, p - 1, x))
+    case Nil => L.Nil // unreachable due to requires
 }
 
 
@@ -311,7 +313,7 @@ class MailApp {
     sent := new Mailbox("Sent");
     archive := new Mailbox("Archive"); //  adding archive
     userBoxes := {};
-    userboxList := Nil;
+    userboxList := L.Nil;
   }
 
   // Deletes user-defined mailbox mb
@@ -343,7 +345,7 @@ class MailApp {
     ensures fresh(userBoxes - old(userBoxes)) // ensures the new mailbox is fresh
   {
     var mb := new Mailbox(n);
-    userboxList := Cons(mb, userboxList);
+    userboxList := L.Cons(mb, userboxList);
     userBoxes := ListElements(userboxList);
   }
 
@@ -427,6 +429,72 @@ class MailApp {
   {
     trash.empty();
   }
+
+  // Forwards a message to new recipients
+  // Creates a copy with the original content plus forwarding history
+  // The new message is placed in the drafts folder
+  method forwardMessage(originalMsg: Message?, newSender: Address) returns (newMsg: Message?)
+    modifies this.drafts
+    requires isValid()
+    requires originalMsg != null
+    ensures isValid()
+    ensures newMsg != null && newMsg in drafts.messages
+    ensures newMsg.sender == newSender
+    ensures fresh(newMsg)
+    ensures |drafts.messages| == |old(drafts.messages)| + 1
+    ensures forall m: Message :: m in old(drafts.messages) ==> m in drafts.messages
+  {
+    // Create new message
+    newMsg := new Message(newSender);
+    
+    // Add forwarding history to content
+    var forwardingHeader := "---------- Forwarded message ----------\n" +
+                           "From: " + originalMsg.sender.value + "\n" +
+                           "Subject: Forwarded message\n\n";
+    
+    var newContent := forwardingHeader + originalMsg.content;
+    newMsg.setContent(newContent);
+    
+    // Set current date
+    var currentDate := new Date(0); // In a real implementation, this would be the current timestamp
+    newMsg.setDate(currentDate);
+    
+    // Add to drafts
+    drafts.add(newMsg);
+    
+    return newMsg;
+  }
+  
+  // Helper method to add recipients to a forwarded message
+  method addRecipientsToForwardedMessage(msg: Message?, recipients: L.List<Address>)
+    modifies msg
+    requires isValid()
+    requires msg != null
+    ensures isValid()
+    ensures msg.content == old(msg.content)
+    ensures msg.date == old(msg.date)
+    ensures msg.sender == old(msg.sender)
+  {
+    var currentList := recipients;
+    var position := L.len(msg.recipients);
+    
+    while currentList != L.Nil
+      modifies msg
+      invariant msg.content == old(msg.content)
+      invariant msg.date == old(msg.date)
+      invariant msg.sender == old(msg.sender)
+      invariant position == L.len(msg.recipients)
+      decreases L.len(currentList)
+    {
+      match currentList {
+        case Cons(recipient, rest) => 
+          msg.addRecipient(position, recipient);
+          currentList := rest;
+          position := position + 1;
+        case Nil => // wont happen 
+      }
+    }
+  }
 }
 
 // Test
@@ -445,6 +513,7 @@ method test() {
 
   ma.newMailbox("students");
   //assert ma.drafts.messages == {};
+  //assert ma.drafts.messages == {};
   assert exists mb: Mailbox :: mb in ma.userBoxes &&
                                mb.name == "students" &&
                                mb.messages == {};
@@ -452,4 +521,32 @@ method test() {
   var s := new Address("email@address.com");
   ma.newMessage(s);
   assert exists nw: Message :: ma.drafts.messages == {nw};
+}
+
+method testForwarding() {
+  var app := new MailApp();
+  
+  var sender := new Address("original@example.com");
+  app.newMessage(sender);
+  
+  var originalMsg: Message :| originalMsg in app.drafts.messages;
+  originalMsg.setContent("Hello, this is the original message content.");
+  
+  // Create recipient for original message
+  var recipient := new Address("recipient@example.com");
+  originalMsg.addRecipient(0, recipient);
+  
+  // Forward the message
+  var forwarder := new Address("forwarder@example.com");
+  var forwardedMsg := app.forwardMessage(originalMsg, forwarder);
+  
+  // Add new recipients
+  var newRecipient := new Address("new-recipient@example.com");
+  app.addRecipientsToForwardedMessage(forwardedMsg, L.Cons(newRecipient, L.Nil));
+  
+  // At this point, forwardedMsg contains:
+  // - Original message content with forwarding history
+  // - New sender (forwarder)
+  // - New recipient
+  // - Is in the drafts folder
 }
