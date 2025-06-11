@@ -949,25 +949,24 @@
     ]
   },
   "packageFolders": {
-    "/home/pedroromao/.nuget/packages/": {}
+    "/home/jmffelisberto/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/pedroromao/dafny_proj/Dafny/Mail.csproj",
-      "projectName": "Mail",
-      "projectPath": "/home/pedroromao/dafny_proj/Dafny/Mail.csproj",
-      "packagesPath": "/home/pedroromao/.nuget/packages/",
-      "outputPath": "/home/pedroromao/dafny_proj/Dafny/obj/",
+      "projectUniqueName": "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/Mail_improv.csproj",
+      "projectName": "Mail_improv",
+      "projectPath": "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/Mail_improv.csproj",
+      "packagesPath": "/home/jmffelisberto/.nuget/packages/",
+      "outputPath": "/home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/pedroromao/.nuget/NuGet/NuGet.Config"
+        "/home/jmffelisberto/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "/usr/lib64/dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -985,8 +984,7 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      },
-      "SdkAnalysisLevel": "9.0.100"
+      }
     },
     "frameworks": {
       "net8.0": {
@@ -1012,26 +1010,12 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[8.0.15, 8.0.15]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Host.linux-x64",
-            "version": "[8.0.15, 8.0.15]"
-          },
-          {
-            "name": "Microsoft.NETCore.App.Ref",
-            "version": "[8.0.15, 8.0.15]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/9.0.105/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/snap/dotnet-sdk/256/sdk/8.0.407/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

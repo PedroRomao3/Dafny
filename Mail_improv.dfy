@@ -7,6 +7,11 @@
   Pedro
   Bruno
   José 
+
+  Enhancements to the Mail Application:
+  - Add a new mailbox for archiving messages
+  -- Add a method to archive messages
+  -- Add a method to unarchive messages
   ===============================================*/
 
 include "List.dfy"
@@ -75,47 +80,47 @@ class Message
     content := "";
     sender := s;
     recipients := L.Nil;
-    lastState := null; // no mailbox state yet
+    lastState := null; // for tracing state - no mailbox state yet
   }
 
   method setContent(c: string)
-    modifies this
-    ensures content == c
-    ensures {id, date, sender} == old({id, date, sender})
-    ensures recipients == old(recipients)
+    modifies this // modifies the content of the message
+    ensures content == c // ensures the content is set to c
+    ensures {id, date, sender} == old({id, date, sender}) // ensures the id, date and sender are unchanged
+    ensures recipients == old(recipients) // ensures the recipients are unchanged
   {
     content := c;
   }
 
   method setDate(d: Date)
-    modifies this
-    ensures date == d
-    ensures {id, sender} == old({id, sender})
-    ensures recipients == old(recipients)
-    ensures content == old(content)
+    modifies this // modifies the date of the message
+    ensures date == d // ensures the date is set to d
+    ensures {id, sender} == old({id, sender}) // ensures the id and sender are unchanged
+    ensures recipients == old(recipients) // ensures the recipients are unchanged
+    ensures content == old(content) // ensures the content is unchanged
   {
     date := d;
   }
 
   method addRecipient(position: nat, recipient: Address)
-    modifies this
+    modifies this // modifies the recipients of the message
     requires position <= L.len(recipients) // allow adding at the end
     ensures L.len(recipients) == L.len(old(recipients)) + 1
     ensures L.elementSeq(recipients) ==
-            L.elementSeq(L.take(old(recipients), position)) + [recipient] + L.elementSeq(L.drop(old(recipients), position))
-    ensures {id, date, sender} == old({id, date, sender})
-    ensures content == old(content)
+            L.elementSeq(L.take(old(recipients), position)) + [recipient] + L.elementSeq(L.drop(old(recipients), position))  // ensures the recipient is added at the specified position
+    ensures {id, date, sender} == old({id, date, sender}) // ensures the id, date and sender are unchanged
+    ensures content == old(content) // ensures the content is unchanged
   {
     recipients := InsertAt(recipients, position, recipient);
   }
 
   //changes the last state of the message
   method setLastState(mb: Mailbox?)
-    modifies this
-    ensures lastState == mb
-    ensures {id, date, sender} == old({id, date, sender})
-    ensures content == old(content)
-    ensures recipients == old(recipients)
+    modifies this //modifies message
+    ensures lastState == mb // updates the last state of the message
+    ensures {id, date, sender} == old({id, date, sender}) // ensures the id, date and sender are unchanged
+    ensures content == old(content) // ensures the content is unchanged
+    ensures recipients == old(recipients) // ensures the recipients are unchanged
   {
     lastState := mb;
   }
@@ -164,9 +169,9 @@ class Mailbox {
 
   // Adds message m to the mailbox
   method add(m: Message)
-    modifies this
-    ensures messages == old(messages) + {m}
-    ensures name == old(name)
+    modifies this // modifies the mailbox, because it adds a message
+    ensures messages == old(messages) + {m} // ensures m is added to the mailbox
+    ensures name == old(name) // ensures the name of the mailbox is unchanged
   {
     messages := messages + {m};
   }
@@ -174,18 +179,18 @@ class Mailbox {
   // Removes message m from mailbox
   // m need not be in the mailbox
   method remove(m: Message)
-    modifies this
-    ensures messages == old(messages) - {m}
-    ensures name == old(name)
+    modifies this // modifies the mailbox, because it removes a message
+    ensures messages == old(messages) - {m} // ensures m is removed from the mailbox
+    ensures name == old(name) // ensures the name of the mailbox is unchanged
   {
     messages := messages - { m };
   }
 
   // Empties the mailbox
   method empty()
-    modifies this
-    ensures messages == {}
-    ensures name == old(name)
+    modifies this   // modifies the mailbox, because it clears its messages
+    ensures messages == {} // ensures the mailbox is empty
+    ensures name == old(name) // ensures the name of the mailbox is unchanged
   {
     messages := {};
   }
@@ -198,7 +203,7 @@ ghost function ListElements<T>(l: L.List<T>): set<T>
   case Cons(h, t) => {h} + ListElements(t)
 }
 
-lemma RemovePreservesExclusion<T(==)>(l: List<T>, x: T, y: T)
+lemma RemovePreservesExclusion<T>(l: List<T>, x: T, y: T)
   ensures y !in elements(l) ==> y !in elements(L.remove(l, x))
 {
   match l
@@ -250,7 +255,7 @@ class MailApp {
   { {inbox, drafts, trash, sent, archive} }
 
   // the inbox, drafts, trash and sent are both abstract and concrete
-  var inbox: Mailbox
+  var inbox: Mailbox  
   var drafts: Mailbox
   var trash: Mailbox
   var sent: Mailbox
@@ -311,10 +316,10 @@ class MailApp {
 
   // Deletes user-defined mailbox mb
   method deleteMailbox(mb: Mailbox)
-    modifies this, mb
-    requires isValid()
-    requires mb in userBoxes
-    ensures isValid()
+    modifies this, mb // modifies the mailbox mb and the userboxList
+    requires isValid() // requires the state to be valid
+    requires mb in userBoxes // requires mb to be in the user-defined mailboxes
+    ensures isValid() // ensures the state is still valid after deletion
   {
     // Prove that system boxes stay out of the updated userBoxes
     RemovePreservesSystemBoxes(userboxList, mb, inbox, drafts, trash, sent, archive);
@@ -327,14 +332,15 @@ class MailApp {
   // Adds a new mailbox with name n to set of user-defined mailboxes
   // provided that no user-defined mailbox has name n already
   method newMailbox(n: string)
-    modifies this
-    requires isValid()
-    requires n != ""
-    requires forall mb: Mailbox :: mb in userBoxes ==> mb.name != n
-    ensures isValid()
-    ensures exists mb: Mailbox :: mb in userBoxes && mb.name == n && mb.messages == {}
-    ensures [inbox, drafts, trash, sent, archive] == old([inbox, drafts, trash, sent, archive])
-    ensures fresh(userBoxes - old(userBoxes))
+    modifies this // modifies the userboxList and userBoxes
+    requires isValid() // requires the state to be valid
+    requires n != "" // requires the name to be non-empty
+    requires forall mb: 
+      Mailbox :: mb in userBoxes ==> mb.name != n // ensures no mailbox with name n already exists
+    ensures isValid() // ensures the state is still valid after adding the mailbox
+    ensures exists mb: Mailbox :: mb in userBoxes && mb.name == n && mb.messages == {} // ensures the new mailbox is added to userBoxes as empty
+    ensures [inbox, drafts, trash, sent, archive] == old([inbox, drafts, trash, sent, archive])  // ensures system mailboxes remain unchanged
+    ensures fresh(userBoxes - old(userBoxes)) // ensures the new mailbox is fresh
   {
     var mb := new Mailbox(n);
     userboxList := Cons(mb, userboxList);
@@ -343,13 +349,13 @@ class MailApp {
 
   // Adds a new message with sender s to the drafts mailbox
   method newMessage(s: Address)
-    modifies this, drafts
-    requires isValid()
-    ensures isValid()
-    ensures exists m: Message :: m in drafts.messages && m.sender == s && fresh(m)
-    ensures |drafts.messages| == |old(drafts.messages)| + 1
-    ensures forall m: Message :: m in old(drafts.messages) ==> m in drafts.messages
-    ensures old(drafts.messages) == {} ==> (exists m: Message :: drafts.messages == {m})
+    modifies this, drafts // modifies the drafts mailbox
+    requires isValid() // requires the state to be valid
+    ensures isValid() // ensures the state is still valid after adding the message
+    ensures exists m: Message :: m in drafts.messages && m.sender == s && fresh(m) // ensures a new message is added to the drafts mailbox
+    ensures |drafts.messages| == |old(drafts.messages)| + 1 // ensures the number of messages in drafts increases by 1
+    ensures forall m: Message :: m in old(drafts.messages) ==> m in drafts.messages // ensures all old messages remain in the drafts mailbox
+    ensures old(drafts.messages) == {} ==> (exists m: Message :: drafts.messages == {m}) // ensures if drafts was empty, it now contains the new message
   {
     var m := new Message(s);
     drafts.add(m);
@@ -357,14 +363,14 @@ class MailApp {
 
   // Moves message m from mailbox mb1 to a different mailbox mb2
   method moveMessage(m: Message, fromMailbox: Mailbox, toMailbox: Mailbox)
-    modifies this, m, fromMailbox, toMailbox
-  requires isValid()
-  requires fromMailbox != toMailbox
-  ensures isValid()
-  ensures m !in fromMailbox.messages
-  ensures m in toMailbox.messages
-  ensures fromMailbox.messages == old(fromMailbox.messages) - {m}
-  ensures toMailbox.messages == old(toMailbox.messages) + {m}
+    modifies this, m, fromMailbox, toMailbox // modifies the message m and the origin and destination mailboxes
+    requires isValid() // requires the state to be valid
+    requires fromMailbox != toMailbox // requires the origin and destination mailboxes to be different
+    ensures isValid() // ensures the state is still valid after moving the message
+    ensures m !in fromMailbox.messages // ensures m is not in the origin mailbox after moving
+    ensures m in toMailbox.messages // ensures m is in the destination mailbox after moving
+    ensures fromMailbox.messages == old(fromMailbox.messages) - {m} // ensures m is removed from the origin mailbox
+    ensures toMailbox.messages == old(toMailbox.messages) + {m} // ensures m is added to the destination mailbox
   {
     fromMailbox.remove(m);
     m.setLastState(fromMailbox); // update last state of the message
@@ -374,38 +380,38 @@ class MailApp {
   // Moves message m from non-null mailbox mb to the trash mailbox
   // provided that mb is not the trash mailbox
   method deleteMessage(m: Message, mb: Mailbox)
-    modifies this, mb, m, trash
-    requires isValid()
-    requires mb != trash
-    ensures isValid()
+    modifies this, mb, m, trash // modifies the mailbox mb, message m and the trash mailbox
+    requires isValid()  // requires the state to be valid
+    requires mb != trash // requires the mailbox mb to be different from the trash mailbox
+    ensures isValid() // ensures the state is still valid after moving the message
   {
     moveMessage(m, mb, trash);
   }
 
   // Moves message m from the drafts mailbox to the sent mailbox
   method sendMessage(m: Message)
-    modifies this, drafts, m, sent
-    requires isValid()
-    ensures isValid()
+    modifies this, drafts, m, sent // modifies the drafts mailbox, message m and the sent mailbox
+    requires isValid() // requires the state to be valid
+    ensures isValid() // ensures the state is still valid after sending the message
   {
     moveMessage(m, drafts, sent);
   }
 
   // Archive message from any mailbox
   method archiveMessage(m: Message, mb: Mailbox)
-    modifies this, mb, m, archive
-    requires isValid()
-    requires mb != archive
-    ensures isValid()
+    modifies this, mb, m, archive // modifies the mailbox mb, message m and the archive mailbox
+    requires isValid() // requires the state to be valid
+    requires mb != archive // requires the mailbox mb to be different from the archive mailbox
+    ensures isValid() // ensures the state is still valid after archiving the message
   {
     moveMessage(m, mb, archive);
   }
 
   // Unarchives message m to the past mailbox
   method unarchiveMessage(m: Message)
-    modifies this, m, archive, m.lastState
-    requires isValid()
-    requires m.lastState != archive
+    modifies this, m, archive, m.lastState // modifies the archive mailbox, message m and the last state of m
+    requires isValid()  // requires the state to be valid
+    requires m.lastState != archive // requires the last state of m to be different from the archive mailbox  
     requires m.lastState != null // message must have a last state
     ensures isValid()
   {
@@ -415,9 +421,9 @@ class MailApp {
 
   // Empties the trash mailbox
   method emptyTrash ()
-    modifies this, trash
-    requires isValid()
-    ensures isValid()
+    modifies this, trash // modifies the trash mailbox
+    requires isValid() // requires the state to be valid
+    ensures isValid() // ensures the state is still valid after emptying the trash
   {
     trash.empty();
   }

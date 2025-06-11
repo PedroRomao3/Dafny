@@ -1,0 +1,5 @@
+/home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.GeneratedMSBuildEditorConfig.editorconfig
+/home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.AssemblyInfoInputs.cache
+/home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.AssemblyInfo.cs
+/home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.csproj.CoreCompileInputs.cache
+/home/jmffelisberto/Desktop/mfs/dafny/Dafny/obj/Debug/net8.0/Mail_improv.sourcelink.json
