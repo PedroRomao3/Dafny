@@ -4,9 +4,9 @@
   Project 2 
 
   Your name(s): 
-  Pedro
+  Pedro Romão
   Bruno
-  José
+  José Felisberto
 
   ===============================================*/
 

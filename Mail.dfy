@@ -4,9 +4,9 @@
   Project 2 
 
   Your name(s):
-  Pedro
+  Pedro Romão
   Bruno
-  José 
+  José Felisberto
   ===============================================*/
 
 include "List.dfy"
@@ -69,15 +69,15 @@ class Message
     ensures sender == s
     ensures recipients == L.Nil
   {
-    id := new MessageId(0);  // placeholder
-    date := new Date(0);     // placeholder
+    id := new MessageId(0);  // placeholder, this would be unique id generation for each msg
+    date := new Date(0);     // placeholder, this woud be a timestamp
     content := "";
     sender := s;
     recipients := L.Nil;
   }
 
   method setContent(c: string)
-    modifies this // modifies the content of the message
+    modifies this // modifies the content of the message the rest of the values remain the same (ensures) 
     ensures content == c // ensures the content is set to c
     ensures {id, date, sender} == old({id, date, sender}) // ensures the id, date and sender remain unchanged
     ensures recipients == old(recipients) // ensures the recipients remain unchanged
@@ -317,7 +317,7 @@ class MailApp {
 
   // Adds a new message with sender s to the drafts mailbox
   method newMessage(s: Address)
-    modifies this, drafts // modifies the drafts mailbox
+    modifies this.drafts // modifies the drafts mailbox
     requires isValid() // requires the state to be valid
     ensures isValid() // ensures the state is still valid after adding the message
     ensures exists m: Message :: m in drafts.messages && m.sender == s && fresh(m) // ensures a new message is added to the drafts mailbox

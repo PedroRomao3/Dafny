@@ -4,16 +4,16 @@
   Project 2 
 
   Your name(s):
-  Pedro
+  Pedro Romão
   Bruno
-  José 
+  José Felisberto 
 
   Enhancements to the Mail Application:
   - Add a new mailbox for archiving messages
   -- Add a method to archive messages
   -- Add a method to unarchive messages
   - Add a method to forward message
-  - Add a method to add new recipients
+  -- Add a method to add new recipients to the forwarded message
   ===============================================*/
 
 include "List.dfy"
@@ -77,8 +77,8 @@ class Message
     ensures recipients == L.Nil
     ensures lastState == null
   {
-    id := new MessageId(0);  // placeholder
-    date := new Date(0);     // placeholder
+    id := new MessageId(0);  // placeholder, this would be unique id generation for each msg
+    date := new Date(0);     // placeholder, this woud be a timestamp
     content := "";
     sender := s;
     recipients := L.Nil;
